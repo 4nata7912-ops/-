@@ -3,10 +3,10 @@ package com.example.model
 data class BelarusHoliday(
     val dateText: String,
     val title: String,
-    val type: String, // "Дзяржаўнае", "Рэлігійнае", "Народнае", "Перанос"
+    val type: String,
     val isDayOff: Boolean,
     val description: String,
-    val emoji: String
+    val iconType: String
 )
 
 object BelarusCalendarData {
@@ -17,7 +17,7 @@ object BelarusCalendarData {
             type = "Дзяржаўнае",
             isDayOff = true,
             description = "Афіцыйныя непрацоўныя святочныя дні ў Беларусі.",
-            emoji = "🎄"
+            iconType = "calendar"
         ),
         BelarusHoliday(
             dateText = "7 студзеня",
@@ -25,7 +25,7 @@ object BelarusCalendarData {
             type = "Рэлігійнае",
             isDayOff = true,
             description = "Свята Нараджэння Хрыстова па юліянскім календары.",
-            emoji = "⭐"
+            iconType = "star"
         ),
         BelarusHoliday(
             dateText = "8 сакавіка",
@@ -33,7 +33,7 @@ object BelarusCalendarData {
             type = "Дзяржаўнае",
             isDayOff = true,
             description = "Міжнароднае жаночае свята, непрацоўны дзень.",
-            emoji = "💐"
+            iconType = "women"
         ),
         BelarusHoliday(
             dateText = "15 сакавіка",
@@ -41,71 +41,55 @@ object BelarusCalendarData {
             type = "Дзяржаўнае",
             isDayOff = false,
             description = "Прыняцце Асноўнага Закона Рэспублікі Беларусь у 1994 годзе.",
-            emoji = "📜"
-        ),
-        BelarusHoliday(
-            dateText = "2 красавіка",
-            title = "Дзень яднання народаў Беларусі і Расіі",
-            type = "Дзяржаўнае",
-            isDayOff = false,
-            description = "Свята Саюзнай дзяржавы Беларусі і Расіі.",
-            emoji = "🤝"
+            iconType = "constitution"
         ),
         BelarusHoliday(
             dateText = "1 мая",
             title = "Свята працы",
             type = "Дзяржаўнае",
             isDayOff = true,
-            description = "Традыцыйнае вясновае свята міру і працы.",
-            emoji = "🌸"
+            description = "Традыцыйнае вясновае свята міру і стваральнай працы.",
+            iconType = "work"
         ),
         BelarusHoliday(
             dateText = "9 мая",
             title = "Дзень Перамогі",
             type = "Дзяржаўнае",
             isDayOff = true,
-            description = "Дзень Перамогі ў Вялікай Айчыннай вайне. Усенароднае свята памяці і славы.",
-            emoji = "🎖️"
+            description = "Дзень Перамогі ў Вялікай Айчыннай вайне. Усенароднае свята воінскай славы.",
+            iconType = "victory"
         ),
         BelarusHoliday(
             dateText = "9-ы дзень пасля Вялікадня",
             title = "Радаўніца",
             type = "Рэлігійнае",
             isDayOff = true,
-            description = "Дзень памінання памерлых продкаў у Беларусі. Непрацоўны дзень.",
-            emoji = "🕯️"
-        ),
-        BelarusHoliday(
-            dateText = "Другая нядзеля мая",
-            title = "Дзень Дзяржаўнага сцяга, герба і гімна",
-            type = "Дзяржаўнае",
-            isDayOff = false,
-            description = "Ушанаванне галоўных дзяржаўных сімвалаў Рэспублікі Беларусь.",
-            emoji = "🇧🇾"
+            description = "Дзень памінання продкаў у Беларусі. Непрацоўны дзень.",
+            iconType = "memory"
         ),
         BelarusHoliday(
             dateText = "3 ліпеня",
             title = "Дзень Незалежнасці Рэспублікі Беларусь",
             type = "Дзяржаўнае",
             isDayOff = true,
-            description = "Галоўнае свята беларускай дзяржаўнасці, дзень вызвалення Мінска ад нямецка-фашысцкіх захопнікаў.",
-            emoji = "🎇"
+            description = "Галоўнае свята беларускай дзяржаўнасці, дзень вызвалення Мінска ад захопнікаў.",
+            iconType = "state"
         ),
         BelarusHoliday(
             dateText = "6–7 ліпеня",
             title = "Купалле",
             type = "Народнае",
             isDayOff = false,
-            description = "Старадаўняе свята сонцастаяння з вогнішчамі, пляценнем вянкоў і пошукам папараць-кветкі.",
-            emoji = "🌿"
+            description = "Старадаўняе народнае свята з песнямі, традыцыйнымі абрадамі і пошукам папараць-кветкі.",
+            iconType = "folk"
         ),
         BelarusHoliday(
             dateText = "7 лістапада",
             title = "Дзень Кастрычніцкай рэвалюцыі",
             type = "Дзяржаўнае",
             isDayOff = true,
-            description = "Афіцыйны непрацоўны дзень у Беларусі.",
-            emoji = "🚩"
+            description = "Афіцыйны святочны непрацоўны дзень у краіне.",
+            iconType = "autumn"
         ),
         BelarusHoliday(
             dateText = "25 снежня",
@@ -113,9 +97,9 @@ object BelarusCalendarData {
             type = "Рэлігійнае",
             isDayOff = true,
             description = "Свята Нараджэння Хрыстова па грыгарыянскім календары.",
-            emoji = "✨"
+            iconType = "christmas"
         )
     )
 
-    val TRANSFERS_INFO = "Паводле пастаноў Савета Міністраў Беларусі: калі святочны непрацоўны дзень прыпадае на аўторак або чацвер, панядзелак або пятніца пераносяцца на адпаведную суботу для стварэння бесперапынных доўгіх выходных."
+    val TRANSFERS_INFO = "Паводле пастаноў Урада Беларусі: калі святочны непрацоўны дзень прыпадае на аўторак або чацвер, панядзелак або пятніца пераносяцца на адпаведную суботу для стварэння працяглых выхадных."
 }

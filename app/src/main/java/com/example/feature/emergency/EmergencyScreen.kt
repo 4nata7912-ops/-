@@ -3,7 +3,6 @@ package com.example.feature.emergency
 import android.content.Intent
 import android.net.Uri
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -25,7 +24,16 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Call
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Emergency
+import androidx.compose.material.icons.filled.HealthAndSafety
+import androidx.compose.material.icons.filled.HomeRepairService
+import androidx.compose.material.icons.filled.LocalFireDepartment
+import androidx.compose.material.icons.filled.LocalPolice
+import androidx.compose.material.icons.filled.MedicalServices
+import androidx.compose.material.icons.filled.Propane
 import androidx.compose.material.icons.filled.Search
+import androidx.compose.material.icons.filled.SupportAgent
+import androidx.compose.material.icons.filled.Train
+import androidx.compose.material.icons.filled.VolunteerActivism
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
@@ -46,6 +54,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontWeight
@@ -84,7 +93,7 @@ fun EmergencyScreen(
     ) {
         // Priority Emergency Banner
         Surface(
-            color = MaterialTheme.colorScheme.errorContainer.copy(alpha = 0.4f),
+            color = MaterialTheme.colorScheme.errorContainer.copy(alpha = 0.35f),
             modifier = Modifier.fillMaxWidth()
         ) {
             Row(
@@ -102,7 +111,7 @@ fun EmergencyScreen(
                 Spacer(modifier = Modifier.width(10.dp))
                 Column {
                     Text(
-                        text = "Адзіныя экстранныя нумары ў Беларусі",
+                        text = "Экстранныя нумары ў Беларусі",
                         style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.Bold),
                         color = MaterialTheme.colorScheme.error
                     )
@@ -124,7 +133,7 @@ fun EmergencyScreen(
             OutlinedTextField(
                 value = searchQuery,
                 onValueChange = { searchQuery = it },
-                placeholder = { Text("Пошук службы або нумара...") },
+                placeholder = { Text("Пошук службы або тэлефона...") },
                 leadingIcon = {
                     Icon(imageVector = Icons.Default.Search, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
                 },
@@ -136,7 +145,7 @@ fun EmergencyScreen(
                     }
                 },
                 singleLine = true,
-                shape = RoundedCornerShape(24.dp),
+                shape = RoundedCornerShape(20.dp),
                 modifier = Modifier
                     .fillMaxWidth()
                     .testTag("emergency_search_input")
@@ -194,17 +203,24 @@ private fun EmergencyCard(
     strings: StringsHolder,
     onDial: () -> Unit
 ) {
+    val iconVector: ImageVector = when (contact.iconType) {
+        "fire" -> Icons.Default.LocalFireDepartment
+        "police" -> Icons.Default.LocalPolice
+        "ambulance" -> Icons.Default.MedicalServices
+        "gas" -> Icons.Default.Propane
+        "utility" -> Icons.Default.HomeRepairService
+        "train" -> Icons.Default.Train
+        "info" -> Icons.Default.SupportAgent
+        "support" -> Icons.Default.VolunteerActivism
+        else -> Icons.Default.HealthAndSafety
+    }
+
     Card(
         modifier = Modifier
             .fillMaxWidth()
             .testTag("emergency_contact_${contact.id}"),
         shape = RoundedCornerShape(16.dp),
-        colors = CardDefaults.cardColors(
-            containerColor = if (contact.isPriority)
-                MaterialTheme.colorScheme.surface
-            else
-                MaterialTheme.colorScheme.surface
-        ),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
     ) {
         Row(
@@ -218,7 +234,23 @@ private fun EmergencyCard(
                 verticalAlignment = Alignment.CenterVertically,
                 modifier = Modifier.weight(1f)
             ) {
-                Text(text = contact.iconEmoji, fontSize = 28.sp)
+                Box(
+                    modifier = Modifier
+                        .size(40.dp)
+                        .clip(RoundedCornerShape(10.dp))
+                        .background(
+                            if (contact.isPriority) MaterialTheme.colorScheme.errorContainer
+                            else MaterialTheme.colorScheme.primaryContainer
+                        ),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Icon(
+                        imageVector = iconVector,
+                        contentDescription = null,
+                        tint = if (contact.isPriority) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.primary,
+                        modifier = Modifier.size(22.dp)
+                    )
+                }
                 Spacer(modifier = Modifier.width(12.dp))
                 Column {
                     Text(
@@ -251,14 +283,14 @@ private fun EmergencyCard(
                     containerColor = if (contact.isPriority) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.primary
                 ),
                 modifier = Modifier
-                    .size(46.dp)
+                    .size(44.dp)
                     .testTag("dial_button_${contact.id}")
             ) {
                 Icon(
                     imageVector = Icons.Default.Call,
                     contentDescription = strings.callNumber,
                     tint = Color.White,
-                    modifier = Modifier.size(20.dp)
+                    modifier = Modifier.size(18.dp)
                 )
             }
         }

@@ -1,6 +1,7 @@
 package com.example.ui.components
 
 import androidx.compose.animation.animateColorAsState
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -20,9 +21,8 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.AutoAwesome
 import androidx.compose.material.icons.filled.Tune
-import androidx.compose.material3.Badge
-import androidx.compose.material3.BadgedBox
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -33,11 +33,12 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.R
 import com.example.model.AppLanguage
 import com.example.model.AppModule
 import com.example.model.StringsHolder
@@ -55,15 +56,15 @@ fun TopModuleBar(
     Surface(
         modifier = modifier.fillMaxWidth(),
         color = MaterialTheme.colorScheme.surface,
-        tonalElevation = 3.dp,
-        shadowElevation = 4.dp
+        tonalElevation = 2.dp,
+        shadowElevation = 3.dp
     ) {
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(top = 10.dp, bottom = 8.dp)
+                .padding(top = 8.dp, bottom = 8.dp)
         ) {
-            // Header Row: App branding + module customization button
+            // Header: Clean brand logo, title, language badge & customize button
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -77,14 +78,17 @@ fun TopModuleBar(
                 ) {
                     Box(
                         modifier = Modifier
-                            .size(36.dp)
-                            .clip(CircleShape)
-                            .background(MaterialTheme.colorScheme.primary),
+                            .size(38.dp)
+                            .clip(RoundedCornerShape(10.dp))
+                            .background(MaterialTheme.colorScheme.primaryContainer),
                         contentAlignment = Alignment.Center
                     ) {
-                        Text(
-                            text = "⭐",
-                            fontSize = 20.sp
+                        Image(
+                            painter = painterResource(id = R.drawable.ic_zorka_star),
+                            contentDescription = strings.appTitle,
+                            modifier = Modifier
+                                .size(34.dp)
+                                .clip(RoundedCornerShape(8.dp))
                         )
                     }
                     Spacer(modifier = Modifier.width(10.dp))
@@ -98,11 +102,23 @@ fun TopModuleBar(
                                 ),
                                 color = MaterialTheme.colorScheme.primary
                             )
-                            Spacer(modifier = Modifier.width(6.dp))
-                            Text(
-                                text = currentLanguage.flag,
-                                fontSize = 14.sp
-                            )
+                            Spacer(modifier = Modifier.width(8.dp))
+                            // Professional Country/Language badge pill
+                            Box(
+                                modifier = Modifier
+                                    .clip(RoundedCornerShape(6.dp))
+                                    .background(MaterialTheme.colorScheme.secondaryContainer)
+                                    .padding(horizontal = 6.dp, vertical = 2.dp)
+                            ) {
+                                Text(
+                                    text = currentLanguage.badge,
+                                    style = MaterialTheme.typography.labelSmall.copy(
+                                        fontWeight = FontWeight.Bold,
+                                        fontSize = 10.sp
+                                    ),
+                                    color = MaterialTheme.colorScheme.onSecondaryContainer
+                                )
+                            }
                         }
                         Text(
                             text = strings.appSubtitle,
@@ -112,33 +128,33 @@ fun TopModuleBar(
                     }
                 }
 
-                // Module setup button in top bar
+                // Module customization button
                 IconButton(
                     onClick = onOpenModuleCustomizer,
                     modifier = Modifier
                         .testTag("customize_modules_button")
-                        .size(42.dp)
+                        .size(40.dp)
                         .clip(CircleShape)
-                        .background(MaterialTheme.colorScheme.primaryContainer)
+                        .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.6f))
                 ) {
                     Icon(
                         imageVector = Icons.Default.Tune,
                         contentDescription = strings.customizeModules,
-                        tint = MaterialTheme.colorScheme.onPrimaryContainer,
-                        modifier = Modifier.size(20.dp)
+                        tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                        modifier = Modifier.size(19.dp)
                     )
                 }
             }
 
             Spacer(modifier = Modifier.height(10.dp))
 
-            // Horizontally Scrollable Menu displaying ONLY the enabled modules
+            // Scrollable Menu Bar showing ONLY user-selected enabled modules
             val scrollState = rememberScrollState()
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
                     .horizontalScroll(scrollState)
-                    .padding(horizontal = 12.dp),
+                    .padding(horizontal = 14.dp),
                 horizontalArrangement = Arrangement.spacedBy(8.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
@@ -152,15 +168,15 @@ fun TopModuleBar(
                     )
                 }
 
-                // Quick Add/Customize button at the end of the tabs row
+                // Add / configure quick action
                 Box(
                     modifier = Modifier
-                        .height(40.dp)
-                        .clip(RoundedCornerShape(20.dp))
+                        .height(38.dp)
+                        .clip(RoundedCornerShape(19.dp))
                         .border(
                             width = 1.dp,
-                            color = MaterialTheme.colorScheme.outline.copy(alpha = 0.4f),
-                            shape = RoundedCornerShape(20.dp)
+                            color = MaterialTheme.colorScheme.outline.copy(alpha = 0.35f),
+                            shape = RoundedCornerShape(19.dp)
                         )
                         .clickable { onOpenModuleCustomizer() }
                         .padding(horizontal = 12.dp),
@@ -171,7 +187,7 @@ fun TopModuleBar(
                             imageVector = Icons.Default.Add,
                             contentDescription = strings.customizeModules,
                             tint = MaterialTheme.colorScheme.primary,
-                            modifier = Modifier.size(16.dp)
+                            modifier = Modifier.size(15.dp)
                         )
                         Spacer(modifier = Modifier.width(4.dp))
                         Text(
@@ -194,7 +210,7 @@ private fun ModuleTopTab(
     onClick: () -> Unit
 ) {
     val backgroundColor by animateColorAsState(
-        targetValue = if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.6f),
+        targetValue = if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f),
         label = "tab_bg"
     )
     val contentColor by animateColorAsState(
@@ -205,15 +221,15 @@ private fun ModuleTopTab(
     Surface(
         modifier = Modifier
             .testTag("module_tab_${module.id}")
-            .clip(RoundedCornerShape(20.dp))
+            .clip(RoundedCornerShape(19.dp))
             .clickable(onClick = onClick),
-        shape = RoundedCornerShape(20.dp),
+        shape = RoundedCornerShape(19.dp),
         color = backgroundColor,
         shadowElevation = if (isSelected) 2.dp else 0.dp
     ) {
         Row(
             modifier = Modifier
-                .height(40.dp)
+                .height(38.dp)
                 .padding(horizontal = 14.dp),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.Center
@@ -222,9 +238,9 @@ private fun ModuleTopTab(
                 imageVector = module.icon,
                 contentDescription = title,
                 tint = contentColor,
-                modifier = Modifier.size(18.dp)
+                modifier = Modifier.size(17.dp)
             )
-            Spacer(modifier = Modifier.width(7.dp))
+            Spacer(modifier = Modifier.width(6.dp))
             Text(
                 text = title,
                 style = MaterialTheme.typography.labelLarge.copy(

@@ -27,15 +27,14 @@ import androidx.compose.material.icons.filled.LocalTaxi
 import androidx.compose.material.icons.filled.OpenInBrowser
 import androidx.compose.material.icons.filled.SwapHoriz
 import androidx.compose.material.icons.filled.Train
+import androidx.compose.material.icons.filled.TransferWithinAStation
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Divider
-import androidx.compose.material3.FilterChip
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Tab
 import androidx.compose.material3.TabRow
@@ -63,9 +62,8 @@ fun TransportScreen(
     modifier: Modifier = Modifier
 ) {
     val context = LocalContext.current
-    var selectedTab by remember { mutableIntStateOf(0) } // 0 = БЧ Цягнікі, 1 = Метро, 2 = Таксі / Гарадскі
+    var selectedTab by remember { mutableIntStateOf(0) }
 
-    // Railway route selector states
     var fromCity by remember { mutableStateOf("Мінск") }
     var toCity by remember { mutableStateOf("Брэст") }
 
@@ -128,7 +126,7 @@ fun TransportScreen(
             verticalArrangement = Arrangement.spacedBy(14.dp)
         ) {
             if (selectedTab == 0) {
-                // Belarusian Railway (БЧ)
+                // Belarusian Railway (БЧ) Card
                 item {
                     Card(
                         shape = RoundedCornerShape(20.dp),
@@ -138,8 +136,21 @@ fun TransportScreen(
                     ) {
                         Column(modifier = Modifier.padding(18.dp)) {
                             Row(verticalAlignment = Alignment.CenterVertically) {
-                                Text(text = "🚆", fontSize = 24.sp)
-                                Spacer(modifier = Modifier.width(10.dp))
+                                Box(
+                                    modifier = Modifier
+                                        .size(38.dp)
+                                        .clip(RoundedCornerShape(10.dp))
+                                        .background(MaterialTheme.colorScheme.primaryContainer),
+                                    contentAlignment = Alignment.Center
+                                ) {
+                                    Icon(
+                                        imageVector = Icons.Default.Train,
+                                        contentDescription = null,
+                                        tint = MaterialTheme.colorScheme.onPrimaryContainer,
+                                        modifier = Modifier.size(22.dp)
+                                    )
+                                }
+                                Spacer(modifier = Modifier.width(12.dp))
                                 Column {
                                     Text(
                                         text = "Беларуская чыгунка (БЧ)",
@@ -147,7 +158,7 @@ fun TransportScreen(
                                         color = MaterialTheme.colorScheme.onSurface
                                     )
                                     Text(
-                                        text = "Пасажырскія зносіны і расклад цягнікоў па Беларусі",
+                                        text = "Міжрэгіянальныя лініі і расклад цягнікоў па Беларусі",
                                         style = MaterialTheme.typography.bodySmall,
                                         color = MaterialTheme.colorScheme.outline
                                     )
@@ -155,6 +166,38 @@ fun TransportScreen(
                             }
 
                             Spacer(modifier = Modifier.height(14.dp))
+
+                            // Popular route quick chips
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .horizontalScroll(rememberScrollState()),
+                                horizontalArrangement = Arrangement.spacedBy(6.dp)
+                            ) {
+                                listOf(
+                                    "Мінск" to "Брэст",
+                                    "Мінск" to "Гомель",
+                                    "Мінск" to "Гродна",
+                                    "Мінск" to "Віцебск"
+                                ).forEach { (from, to) ->
+                                    Surface(
+                                        shape = RoundedCornerShape(8.dp),
+                                        color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.6f),
+                                        modifier = Modifier.clickable {
+                                            fromCity = from
+                                            toCity = to
+                                        }
+                                    ) {
+                                        Text(
+                                            text = "$from ➔ $to",
+                                            style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Medium),
+                                            modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
+                                        )
+                                    }
+                                }
+                            }
+
+                            Spacer(modifier = Modifier.height(10.dp))
 
                             // Route Selector
                             Row(
@@ -184,26 +227,25 @@ fun TransportScreen(
                                 }
                             }
 
-                            Spacer(modifier = Modifier.height(14.dp))
+                            Spacer(modifier = Modifier.height(12.dp))
                             Divider(color = MaterialTheme.colorScheme.outlineVariant)
-                            Spacer(modifier = Modifier.height(14.dp))
+                            Spacer(modifier = Modifier.height(12.dp))
 
-                            // Route estimated info
                             val travelTime = when {
-                                (fromCity == "Мінск" && toCity == "Брэст") || (fromCity == "Брэст" && toCity == "Мінск") -> "3 г 15 хв (Штадлер ЭПР) / 3 г 45 хв"
+                                (fromCity == "Мінск" && toCity == "Брэст") || (fromCity == "Брэст" && toCity == "Мінск") -> "3 г 15 хв (Штадлер ЭПР бізнес-клас)"
                                 (fromCity == "Мінск" && toCity == "Гродна") || (fromCity == "Гродна" && toCity == "Мінск") -> "4 г 00 хв (Міжрэгіянальныя лініі)"
-                                (fromCity == "Мінск" && toCity == "Гомель") || (fromCity == "Гомель" && toCity == "Мінск") -> "2 г 50 хв (Штадлер бізнес-клас)"
-                                (fromCity == "Мінск" && toCity == "Віцебск") || (fromCity == "Віцебск" && toCity == "Мінск") -> "3 г 05 хв (Хуткі міжрэгіянальны)"
+                                (fromCity == "Мінск" && toCity == "Гомель") || (fromCity == "Гомель" && toCity == "Мінск") -> "2 г 50 хв (Штадлер ЭПР)"
+                                (fromCity == "Мінск" && toCity == "Віцебск") || (fromCity == "Віцебск" && toCity == "Мінск") -> "3 г 05 хв (Міжрэгіянальны)"
                                 (fromCity == "Мінск" && toCity == "Магілёў") || (fromCity == "Магілёў" && toCity == "Мінск") -> "2 г 45 хв"
                                 fromCity == toCity -> "Адзін і той жа горад"
-                                else -> "Ад 2 г 30 хв да 5 г у залежнасці ад саставу"
+                                else -> "Ад 2 г 30 хв да 5 г"
                             }
 
                             Box(
                                 modifier = Modifier
                                     .fillMaxWidth()
                                     .clip(RoundedCornerShape(12.dp))
-                                    .background(MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.4f))
+                                    .background(MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.35f))
                                     .padding(12.dp)
                             ) {
                                 Column {
@@ -234,7 +276,7 @@ fun TransportScreen(
                             ) {
                                 Icon(imageVector = Icons.Default.OpenInBrowser, contentDescription = null, modifier = Modifier.size(18.dp))
                                 Spacer(modifier = Modifier.width(6.dp))
-                                Text(text = "Адкрыць білеты і расклад на pass.rw.by")
+                                Text(text = "Купіць білеты на pass.rw.by")
                             }
                         }
                     }
@@ -248,7 +290,7 @@ fun TransportScreen(
                         stations = listOf(
                             "Уручча", "Барысаўскі тракт", "Усход", "Маскоўская",
                             "Парк Чалюскінцаў", "Акадэмія навук", "Плошча Якуба Коласа",
-                            "Плошча Перамогі", "Кастрычніцкая 🔁", "Плошча Леніна 🔁",
+                            "Плошча Перамогі", "Кастрычніцкая [Перасадка]", "Плошча Леніна [Перасадка]",
                             "Інстытут культуры", "Грушаўка", "Міхалова", "Пятроўшчына", "Малінаўка"
                         ),
                         lengthText = "19.1 км • 15 станцый"
@@ -261,7 +303,7 @@ fun TransportScreen(
                         lineColor = Color(0xFFE53935),
                         stations = listOf(
                             "Каменная Горка", "Кунцаўшчына", "Спартыўная", "Пушкінская",
-                            "Маладзёжная", "Фрунзенская 🔁", "Няміга", "Купалаўская 🔁",
+                            "Маладзёжная", "Фрунзенская [Перасадка]", "Няміга", "Купалаўская [Перасадка]",
                             "Першамайская", "Пралетарская", "Трактарны завод", "Партызанская",
                             "Аўтазаводская", "Магілёўская"
                         ),
@@ -274,22 +316,22 @@ fun TransportScreen(
                         lineName = "3. Зеленалужская лінія (Зялёная)",
                         lineColor = Color(0xFF43A047),
                         stations = listOf(
-                            "Юбілейная плошча 🔁", "Плошча Францішка Багушэвіча", "Вакзальная 🔁",
+                            "Юбілейная плошча [Перасадка]", "Плошча Францішка Багушэвіча", "Вакзальная [Перасадка]",
                             "Кавальская Слабада", "Аэрадромная", "Немаршанскі Сад", "Слуцкі Гасцінец"
                         ),
-                        lengthText = "7 станцый • Аўтаматычныя цягнікі Штадлер"
+                        lengthText = "7 станцый • Саставы Stadler"
                     )
                 }
             } else {
-                // Taxi & City Transport
+                // Taxi & Transport
                 item {
                     TaxiDirectoryCard(
-                        title = "Службы таксі і заказ паездак",
+                        title = "Службы таксі і каршэрынг",
                         items = listOf(
                             TaxiItem("Яндэкс Go", "Праз дадатак або 7220", "Папулярны сэрвіс паездак і дастаўкі па ўсёй Беларусі"),
                             TaxiItem("Таксі 135 «Сталіца»", "Кароткі нумар 135", "Адна з найстарэйшых надзейных службаў таксі Мінска"),
                             TaxiItem("Таксі 7788 «Алмаз»", "Кароткі нумар 7788", "Кругласутачны заказ аўто"),
-                            TaxiItem("Anytime / Мульцімотарс", "Каршэрынг у Мінску", "Пахвілінная арэнда аўтамабіляў")
+                            TaxiItem("Anytime / Мульцімотарс", "Каршэрынг", "Пахвілінная арэнда аўтамабіляў")
                         )
                     )
                 }
@@ -360,7 +402,7 @@ private fun MetroLineCard(
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Box(
                         modifier = Modifier
-                            .size(14.dp)
+                            .size(12.dp)
                             .clip(CircleShape)
                             .background(lineColor)
                     )
@@ -391,6 +433,7 @@ private fun MetroLineCard(
                     Divider(color = MaterialTheme.colorScheme.outlineVariant)
                     Spacer(modifier = Modifier.height(8.dp))
                     stations.forEachIndexed { i, station ->
+                        val hasTransfer = station.contains("[Перасадка]")
                         Row(
                             verticalAlignment = Alignment.CenterVertically,
                             modifier = Modifier.padding(vertical = 3.dp)
@@ -402,12 +445,28 @@ private fun MetroLineCard(
                                 modifier = Modifier.width(24.dp)
                             )
                             Text(
-                                text = station,
+                                text = station.replace("[Перасадка]", "").trim(),
                                 style = MaterialTheme.typography.bodyMedium.copy(
-                                    fontWeight = if (station.contains("🔁")) FontWeight.Bold else FontWeight.Normal
+                                    fontWeight = if (hasTransfer) FontWeight.Bold else FontWeight.Normal
                                 ),
-                                color = if (station.contains("🔁")) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface
+                                color = if (hasTransfer) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface
                             )
+                            if (hasTransfer) {
+                                Spacer(modifier = Modifier.width(6.dp))
+                                Box(
+                                    modifier = Modifier
+                                        .clip(RoundedCornerShape(4.dp))
+                                        .background(MaterialTheme.colorScheme.secondaryContainer)
+                                        .padding(horizontal = 4.dp, vertical = 1.dp)
+                                ) {
+                                    Text(
+                                        text = "Перасадка",
+                                        fontSize = 9.sp,
+                                        color = MaterialTheme.colorScheme.onSecondaryContainer,
+                                        fontWeight = FontWeight.Bold
+                                    )
+                                }
+                            }
                         }
                     }
                 }
@@ -461,7 +520,7 @@ private fun TaxiDirectoryCard(
                     )
                 }
                 if (index < items.size - 1) {
-                    Divider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
+                    Divider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.4f))
                 }
             }
         }

@@ -20,7 +20,6 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalContext
 import com.example.data.CurrencyRepository
 import com.example.data.NewsRepository
 import com.example.data.PreferencesManager
@@ -28,7 +27,10 @@ import com.example.data.WeatherRepository
 import com.example.feature.calendar.CalendarScreen
 import com.example.feature.currency.CurrencyScreen
 import com.example.feature.emergency.EmergencyScreen
+import com.example.feature.heritage.HeritageScreen
 import com.example.feature.news.NewsScreen
+import com.example.feature.runa.RunaChatScreen
+import com.example.feature.runa.RunaEngine
 import com.example.feature.settings.SettingsScreen
 import com.example.feature.transport.TransportScreen
 import com.example.feature.utilities.UtilitiesScreen
@@ -37,6 +39,7 @@ import com.example.model.AccentPalette
 import com.example.model.AppLanguage
 import com.example.model.AppModule
 import com.example.model.AppTranslations
+import com.example.model.NewsSource
 import com.example.model.ThemeMode
 import com.example.ui.components.ModuleSelectionSheet
 import com.example.ui.components.TopModuleBar
@@ -73,7 +76,6 @@ fun ZorkaApp(
     currencyRepository: CurrencyRepository,
     weatherRepository: WeatherRepository
 ) {
-    // Preferences states
     var currentLanguage by remember { mutableStateOf(prefsManager.getLanguage()) }
     var currentThemeMode by remember { mutableStateOf(prefsManager.getThemeMode()) }
     var currentAccent by remember { mutableStateOf(prefsManager.getAccentPalette()) }
@@ -81,16 +83,17 @@ fun ZorkaApp(
     var selectedNewsSourceId by remember { mutableStateOf(prefsManager.getSelectedNewsSource()) }
     var selectedBankId by remember { mutableStateOf(prefsManager.getSelectedBank()) }
 
-    // Navigation state
+    val runaEngine = remember {
+        RunaEngine(newsRepository, currencyRepository)
+    }
+
     var activeModule by remember {
         mutableStateOf(enabledModules.firstOrNull() ?: AppModule.NEWS)
     }
 
-    // Module Customizer Bottom Sheet state
     var showModuleSheet by remember { mutableStateOf(false) }
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
 
-    // Check first launch to welcome and offer customizing modules immediately
     LaunchedEffect(Unit) {
         if (prefsManager.isFirstLaunch) {
             showModuleSheet = true
@@ -98,7 +101,6 @@ fun ZorkaApp(
         }
     }
 
-    // Keep active module valid when enabled modules change
     LaunchedEffect(enabledModules) {
         if (!enabledModules.contains(activeModule)) {
             activeModule = enabledModules.firstOrNull() ?: AppModule.NEWS
@@ -109,10 +111,13 @@ fun ZorkaApp(
         AppTranslations.get(currentLanguage)
     }
 
-    // Back handling: pop to first module if not already there
     val firstModule = enabledModules.firstOrNull() ?: AppModule.NEWS
     BackHandler(enabled = activeModule != firstModule) {
         activeModule = firstModule
+    }
+
+    val currentNewsSource = remember(selectedNewsSourceId) {
+        NewsSource.findById(selectedNewsSourceId)
     }
 
     ZorkaTheme(
@@ -143,6 +148,7 @@ fun ZorkaApp(
                     AppModule.NEWS -> {
                         NewsScreen(
                             repository = newsRepository,
+                            prefsManager = prefsManager,
                             selectedSourceId = selectedNewsSourceId,
                             onSourceChanged = {
                                 selectedNewsSourceId = it
@@ -164,8 +170,18 @@ fun ZorkaApp(
                         )
                     }
 
+                    AppModule.RUNA_AI -> {
+                        RunaChatScreen(
+                            engine = runaEngine,
+                            currentLanguage = currentLanguage,
+                            currentNewsSource = currentNewsSource,
+                            strings = strings
+                        )
+                    }
+
                     AppModule.UTILITIES -> {
                         UtilitiesScreen(
+                            prefsManager = prefsManager,
                             strings = strings
                         )
                     }
@@ -186,6 +202,12 @@ fun ZorkaApp(
                         WeatherScreen(
                             repository = weatherRepository,
                             currentLanguage = currentLanguage,
+                            strings = strings
+                        )
+                    }
+
+                    AppModule.HERITAGE -> {
+                        HeritageScreen(
                             strings = strings
                         )
                     }
@@ -221,7 +243,6 @@ fun ZorkaApp(
                 }
             }
 
-            // Modular customization sheet
             if (showModuleSheet) {
                 ModuleSelectionSheet(
                     sheetState = sheetState,

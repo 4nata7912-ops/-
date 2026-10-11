@@ -2,6 +2,8 @@ package com.example
 
 import com.example.data.CurrencyRepository
 import com.example.data.NewsRepository
+import com.example.feature.heritage.BelarusHeritageData
+import com.example.feature.runa.RunaEngine
 import com.example.model.AppLanguage
 import com.example.model.AppModule
 import com.example.model.AppTranslations
@@ -44,7 +46,7 @@ class ExampleUnitTest {
     @Test
     fun testCurrencyRatesAndBanks() = runBlocking {
         val currencyRepo = CurrencyRepository()
-        assertEquals(6, currencyRepo.banks.size) // NBRB, Belarusbank, Priorbank, Alfa, Sber, MTBank
+        assertEquals(6, currencyRepo.banks.size)
 
         val rates = currencyRepo.fetchRates()
         assertTrue(rates.containsKey("nbrb"))
@@ -69,6 +71,40 @@ class ExampleUnitTest {
         val defaults = AppModule.DEFAULT_MODULES
         assertTrue(defaults.contains(AppModule.NEWS))
         assertTrue(defaults.contains(AppModule.CURRENCY))
+        assertTrue(defaults.contains(AppModule.RUNA_AI))
         assertTrue(defaults.contains(AppModule.SETTINGS))
+    }
+
+    @Test
+    fun testRunaAiKnowledgeEngine() = runBlocking {
+        val newsRepo = NewsRepository()
+        val currRepo = CurrencyRepository()
+        val runa = RunaEngine(newsRepo, currRepo)
+
+        val beltaSource = NewsSource.ALL.first()
+
+        // Test News analysis
+        val newsReply = runa.generateResponse("Што піша БелТА ў апошніх навінах?", AppLanguage.BE, beltaSource)
+        assertTrue(newsReply.contains("БелТА") || newsReply.contains("навіны"))
+
+        // Test Currency analysis
+        val currReply = runa.generateResponse("Які курс валют і дзе лепш абмяняць даляр?", AppLanguage.BE, beltaSource)
+        assertTrue(currReply.contains("НБРБ") || currReply.contains("USD") || currReply.contains("Долар"))
+
+        // Test Culinary knowledge
+        val cuisineReply = runa.generateResponse("Як прыгатаваць сапраўдныя дранікі?", AppLanguage.BE, beltaSource)
+        assertTrue(cuisineReply.contains("дранікі") || cuisineReply.contains("бульб"))
+
+        // Test Castles knowledge
+        val castleReply = runa.generateResponse("Раскажы пра Мірскі і Нясвіжскі замак", AppLanguage.BE, beltaSource)
+        assertTrue(castleReply.contains("Мірскі") || castleReply.contains("Радзівіл"))
+    }
+
+    @Test
+    fun testHeritageSpots() {
+        val spots = BelarusHeritageData.SPOTS
+        assertTrue(spots.isNotEmpty())
+        assertTrue(spots.any { it.id == "mir" && it.isUnesco })
+        assertTrue(spots.any { it.id == "nesvizh" && it.isUnesco })
     }
 }

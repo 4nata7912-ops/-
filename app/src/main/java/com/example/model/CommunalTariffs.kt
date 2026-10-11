@@ -5,19 +5,27 @@ data class UtilityItem(
     val nameKey: String,
     val unit: String,
     val defaultTariff: Double, // in BYN per unit
-    val iconEmoji: String,
+    val iconName: String,
     val description: String
 )
 
+data class SavedUtilityCalculation(
+    val id: String,
+    val dateText: String,
+    val accountNumber: String,
+    val totalByn: Double,
+    val details: String
+)
+
 object BelarusUtilityTariffs {
-    // Standard established tariffs in Belarus (2025/2026 typical subsidised residential rates in BYN)
+    // Standard established residential tariffs in Belarus in BYN
     val ELECTRICITY = UtilityItem(
         id = "elec",
         nameKey = "electricity",
         unit = "кВт·г",
         defaultTariff = 0.2708,
-        iconEmoji = "⚡",
-        description = "Аднаставачны субсідаваны тарыф для кватэр з электраплітамі"
+        iconName = "bolt",
+        description = "Аднаставачны субсідаваны тарыф для жылых памяшканняў"
     )
 
     val COLD_WATER = UtilityItem(
@@ -25,8 +33,8 @@ object BelarusUtilityTariffs {
         nameKey = "coldWater",
         unit = "м³",
         defaultTariff = 1.5553,
-        iconEmoji = "💧",
-        description = "Водазабеспячэнне і водаадвядзенне (каналізацыя)"
+        iconName = "water_drop",
+        description = "Водазабеспячэнне і каналізацыя (Мінскводаканал)"
     )
 
     val HOT_WATER = UtilityItem(
@@ -34,8 +42,8 @@ object BelarusUtilityTariffs {
         nameKey = "hotWater",
         unit = "м³",
         defaultTariff = 2.4710,
-        iconEmoji = "♨️",
-        description = "Падагрэў вады (цеплавая энергія)"
+        iconName = "hot_water",
+        description = "Падагрэў вады (цеплавая энергія на патрэбы ГВП)"
     )
 
     val GAS = UtilityItem(
@@ -43,8 +51,8 @@ object BelarusUtilityTariffs {
         nameKey = "gas",
         unit = "м³",
         defaultTariff = 0.2062,
-        iconEmoji = "🔥",
-        description = "Прыродны газ пры наяўнасці індывідуальных газавых лічыльнікаў"
+        iconName = "gas",
+        description = "Прыродны газ пры наяўнасці індывідуальных лічыльнікаў"
     )
 
     val HEATING = UtilityItem(
@@ -52,8 +60,8 @@ object BelarusUtilityTariffs {
         nameKey = "heating",
         unit = "Гкал",
         defaultTariff = 24.7187,
-        iconEmoji = "🏠",
-        description = "Цеплазабеспячэнне кватэры ў ацяпляльны перыяд"
+        iconName = "heating",
+        description = "Ацяпленне кватэры ў ацяпляльны перыяд"
     )
 
     val ALL_SERVICES = listOf(ELECTRICITY, COLD_WATER, HOT_WATER, GAS, HEATING)

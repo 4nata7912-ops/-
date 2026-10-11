@@ -25,16 +25,16 @@ class CurrencyRepository {
     val banks = listOf(
         BankInfo(
             id = "nbrb",
-            name = "Нацыянальны банк РБ (НБРБ)",
+            name = "Нацыянальны банк Рэспублікі Беларусь",
             shortName = "НБРБ",
-            colorHex = 0xFF1E56A0,
+            brandColorHex = 0xFF1E56A0,
             spreads = emptyMap()
         ),
         BankInfo(
             id = "belarusbank",
             name = "Беларусбанк",
             shortName = "Беларусбанк",
-            colorHex = 0xFF006837,
+            brandColorHex = 0xFF006837,
             spreads = mapOf(
                 "USD" to BankSpread(-0.0045, +0.0055),
                 "EUR" to BankSpread(-0.0050, +0.0060),
@@ -47,7 +47,7 @@ class CurrencyRepository {
             id = "priorbank",
             name = "Прыёрбанк (Priorbank)",
             shortName = "Прыёрбанк",
-            colorHex = 0xFFFFCC00,
+            brandColorHex = 0xFFC69214,
             spreads = mapOf(
                 "USD" to BankSpread(-0.0035, +0.0045),
                 "EUR" to BankSpread(-0.0040, +0.0050),
@@ -58,9 +58,9 @@ class CurrencyRepository {
         ),
         BankInfo(
             id = "alfa",
-            name = "Альфа-Банк",
-            shortName = "Альфа",
-            colorHex = 0xFFEF3124,
+            name = "Альфа-Банк (Беларусь)",
+            shortName = "Альфа-Банк",
+            brandColorHex = 0xFFEF3124,
             spreads = mapOf(
                 "USD" to BankSpread(-0.0030, +0.0040),
                 "EUR" to BankSpread(-0.0035, +0.0045),
@@ -71,9 +71,9 @@ class CurrencyRepository {
         ),
         BankInfo(
             id = "sber",
-            name = "Сбер Банк",
-            shortName = "Сбер",
-            colorHex = 0xFF21A038,
+            name = "Сбер Банк (Беларусь)",
+            shortName = "Сбер Банк",
+            brandColorHex = 0xFF1B8733,
             spreads = mapOf(
                 "USD" to BankSpread(-0.0040, +0.0050),
                 "EUR" to BankSpread(-0.0045, +0.0055),
@@ -86,7 +86,7 @@ class CurrencyRepository {
             id = "mtbank",
             name = "МТБанк",
             shortName = "МТБанк",
-            colorHex = 0xFF145DA0,
+            brandColorHex = 0xFF0D47A1,
             spreads = mapOf(
                 "USD" to BankSpread(-0.0028, +0.0038),
                 "EUR" to BankSpread(-0.0032, +0.0042),
@@ -97,13 +97,12 @@ class CurrencyRepository {
         )
     )
 
-    // Default base rates if offline or API is down
     private var baseNbrbRates = mapOf(
-        "USD" to RawRate("USD", "Долар ЗША", "🇺🇸", 1, 3.2650, +0.0025),
-        "EUR" to RawRate("EUR", "Еўра", "🇪🇺", 1, 3.5220, -0.0035),
-        "RUB" to RawRate("RUB", "Расійскі рубель", "⚪", 100, 3.4810, +0.0015),
-        "CNY" to RawRate("CNY", "Кітайскі юань", "🇨🇳", 10, 4.5420, +0.0040),
-        "PLN" to RawRate("PLN", "Польскі злоты", "🇵🇱", 10, 8.2450, -0.0060)
+        "USD" to RawRate("USD", "Долар ЗША", "$", 1, 3.2650, +0.0025),
+        "EUR" to RawRate("EUR", "Еўра", "€", 1, 3.5220, -0.0035),
+        "RUB" to RawRate("RUB", "Расійскі рубель", "₽", 100, 3.4810, +0.0015),
+        "CNY" to RawRate("CNY", "Кітайскі юань", "¥", 10, 4.5420, +0.0040),
+        "PLN" to RawRate("PLN", "Польскі злоты", "zł", 10, 8.2450, -0.0060)
     )
 
     suspend fun fetchRates(): Map<String, BankRatesSet> = withContext(Dispatchers.IO) {
@@ -131,7 +130,7 @@ class CurrencyRepository {
                     CurrencyRate(
                         code = raw.code,
                         name = raw.name,
-                        flag = raw.flag,
+                        symbol = raw.symbol,
                         scale = raw.scale,
                         nbrbRate = raw.rate,
                         buyRate = buyRate,
@@ -189,7 +188,7 @@ class CurrencyRepository {
     private data class RawRate(
         val code: String,
         val name: String,
-        val flag: String,
+        val symbol: String,
         val scale: Int,
         val rate: Double,
         val delta: Double

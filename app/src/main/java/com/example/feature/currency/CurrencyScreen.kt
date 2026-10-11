@@ -1,7 +1,9 @@
 package com.example.feature.currency
 
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
@@ -21,15 +23,16 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowDownward
-import androidx.compose.material.icons.filled.ArrowUpward
+import androidx.compose.material.icons.filled.AccountBalance
 import androidx.compose.material.icons.filled.Calculate
 import androidx.compose.material.icons.filled.CurrencyExchange
+import androidx.compose.material.icons.filled.NorthEast
 import androidx.compose.material.icons.filled.Refresh
+import androidx.compose.material.icons.filled.SouthEast
+import androidx.compose.material.icons.filled.Star
 import androidx.compose.material.icons.filled.SwapVert
 import androidx.compose.material.icons.filled.TrendingDown
 import androidx.compose.material.icons.filled.TrendingUp
-import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
@@ -55,17 +58,19 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.R
 import com.example.data.CurrencyRepository
 import com.example.model.BankRatesSet
 import com.example.model.CurrencyRate
 import com.example.model.StringsHolder
 import kotlinx.coroutines.launch
-import kotlin.math.roundToInt
 
 @Composable
 fun CurrencyScreen(
@@ -84,8 +89,8 @@ fun CurrencyScreen(
     var converterAmount by remember { mutableStateOf("100") }
     var fromCurrency by remember { mutableStateOf("USD") }
     var toCurrency by remember { mutableStateOf("BYN") }
-    var isClientSelling by remember { mutableStateOf(true) } // true = client sells foreign curr to bank, false = buys
-    var selectedTab by remember { mutableIntStateOf(0) } // 0 = Converter, 1 = Bank Rates Table
+    var isClientSelling by remember { mutableStateOf(true) } // true = sell foreign to bank, false = buy
+    var selectedTab by remember { mutableIntStateOf(0) }
 
     fun loadRates() {
         isLoading = true
@@ -100,7 +105,6 @@ fun CurrencyScreen(
     }
 
     val currentBankRates = ratesData[currentBankId] ?: ratesData["nbrb"]
-    val supportedCurrencies = listOf("USD", "EUR", "RUB", "CNY", "PLN", "BYN")
 
     Column(
         modifier = modifier
@@ -113,7 +117,7 @@ fun CurrencyScreen(
             tonalElevation = 1.dp,
             modifier = Modifier.fillMaxWidth()
         ) {
-            Column(modifier = Modifier.padding(vertical = 8.dp)) {
+            Column(modifier = Modifier.padding(vertical = 6.dp)) {
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -124,7 +128,7 @@ fun CurrencyScreen(
                     Column {
                         Text(
                             text = strings.selectBank,
-                            style = MaterialTheme.typography.labelLarge.copy(fontWeight = FontWeight.SemiBold),
+                            style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.SemiBold),
                             color = MaterialTheme.colorScheme.onSurface
                         )
                         currentBankRates?.let {
@@ -140,28 +144,27 @@ fun CurrencyScreen(
                         onClick = { loadRates() },
                         modifier = Modifier
                             .testTag("refresh_rates_button")
-                            .size(36.dp)
+                            .size(34.dp)
                     ) {
                         if (isLoading) {
-                            CircularProgressIndicator(modifier = Modifier.size(18.dp), strokeWidth = 2.dp)
+                            CircularProgressIndicator(modifier = Modifier.size(16.dp), strokeWidth = 2.dp)
                         } else {
                             Icon(
                                 imageVector = Icons.Default.Refresh,
                                 contentDescription = strings.refresh,
                                 tint = MaterialTheme.colorScheme.primary,
-                                modifier = Modifier.size(20.dp)
+                                modifier = Modifier.size(18.dp)
                             )
                         }
                     }
                 }
 
-                // Banks horizontal scroll
                 val bankScroll = rememberScrollState()
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
                         .horizontalScroll(bankScroll)
-                        .padding(horizontal = 16.dp, vertical = 6.dp),
+                        .padding(horizontal = 16.dp, vertical = 4.dp),
                     horizontalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
                     repository.banks.forEach { bank ->
@@ -173,10 +176,19 @@ fun CurrencyScreen(
                                 onBankChanged(bank.id)
                             },
                             label = {
-                                Text(
-                                    text = bank.shortName,
-                                    fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal
-                                )
+                                Row(verticalAlignment = Alignment.CenterVertically) {
+                                    Box(
+                                        modifier = Modifier
+                                            .size(8.dp)
+                                            .clip(CircleShape)
+                                            .background(Color(bank.brandColorHex))
+                                    )
+                                    Spacer(modifier = Modifier.width(6.dp))
+                                    Text(
+                                        text = bank.shortName,
+                                        fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal
+                                    )
+                                }
                             },
                             modifier = Modifier.testTag("bank_chip_${bank.id}")
                         )
@@ -185,7 +197,7 @@ fun CurrencyScreen(
             }
         }
 
-        // Subtabs: [Converter] vs [All Bank Rates]
+        // Subtabs: [Канвертар] vs [Курсы банка]
         TabRow(
             selectedTabIndex = selectedTab,
             containerColor = MaterialTheme.colorScheme.surface,
@@ -225,7 +237,7 @@ fun CurrencyScreen(
             verticalArrangement = Arrangement.spacedBy(14.dp)
         ) {
             if (selectedTab == 0) {
-                // Interactive Converter
+                // Converter Card
                 item {
                     ConverterCard(
                         amount = converterAmount,
@@ -247,13 +259,13 @@ fun CurrencyScreen(
                     )
                 }
 
-                // Bank comparison for this operation
+                // Bank comparison list
                 item {
                     Text(
-                        text = "Параўнанне ставак ва ўсіх банках",
+                        text = "Параўнанне ставак у банках Беларусі",
                         style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
                         color = MaterialTheme.colorScheme.onBackground,
-                        modifier = Modifier.padding(top = 8.dp)
+                        modifier = Modifier.padding(top = 4.dp)
                     )
                 }
 
@@ -274,43 +286,56 @@ fun CurrencyScreen(
                     )
                 }
             } else {
-                // Live Rates Table for Current Bank
+                // Hero Banner for Finance
                 item {
                     Card(
-                        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.35f)),
-                        shape = RoundedCornerShape(14.dp),
+                        shape = RoundedCornerShape(18.dp),
+                        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
                         modifier = Modifier.fillMaxWidth()
                     ) {
-                        Row(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(12.dp),
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Icon(
-                                imageVector = Icons.Default.CurrencyExchange,
-                                contentDescription = null,
-                                tint = MaterialTheme.colorScheme.primary,
-                                modifier = Modifier.size(24.dp)
+                        Box(modifier = Modifier.fillMaxWidth().height(120.dp)) {
+                            Image(
+                                painter = painterResource(id = R.drawable.img_finance_banner),
+                                contentDescription = "Finance Analytics",
+                                contentScale = ContentScale.Crop,
+                                modifier = Modifier.fillMaxSize()
                             )
-                            Spacer(modifier = Modifier.width(10.dp))
-                            Column {
+                            Box(
+                                modifier = Modifier
+                                    .fillMaxSize()
+                                    .background(
+                                        androidx.compose.ui.graphics.Brush.verticalGradient(
+                                            colors = listOf(
+                                                androidx.compose.ui.graphics.Color.Transparent,
+                                                androidx.compose.ui.graphics.Color.Black.copy(alpha = 0.7f)
+                                            )
+                                        )
+                                    )
+                            )
+                            Column(
+                                modifier = Modifier
+                                    .align(Alignment.BottomStart)
+                                    .padding(14.dp)
+                            ) {
                                 Text(
                                     text = currentBankRates?.bankName ?: strings.bankNbrb,
-                                    style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.Bold),
-                                    color = MaterialTheme.colorScheme.onSurface
+                                    style = MaterialTheme.typography.titleMedium.copy(
+                                        fontWeight = FontWeight.Bold,
+                                        color = androidx.compose.ui.graphics.Color.White
+                                    )
                                 )
                                 Text(
-                                    text = if (currentBankId == "nbrb") "Афіцыйныя фіксаваныя курсы Нацбанка" else "Бягучыя курсы абмену ў касах і дадатку банка",
-                                    style = MaterialTheme.typography.bodySmall,
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                                    text = if (currentBankId == "nbrb") "Афіцыйныя фіксаваныя курсы Нацбанка" else "Бягучыя курсы куплі і продажу",
+                                    style = MaterialTheme.typography.labelSmall.copy(
+                                        color = androidx.compose.ui.graphics.Color.White.copy(alpha = 0.85f)
+                                    )
                                 )
                             }
                         }
                     }
                 }
 
-                // Rates Items
+                // Table of Rates
                 currentBankRates?.rates?.forEach { rate ->
                     item(key = rate.code) {
                         CurrencyRateRow(rate = rate, isNbrb = currentBankId == "nbrb", strings = strings)
@@ -341,7 +366,6 @@ private fun ConverterCard(
 ) {
     val doubleAmount = amount.toDoubleOrNull() ?: 0.0
 
-    // Compute converted amount
     val convertedAmount = remember(doubleAmount, fromCurrency, toCurrency, isClientSelling, currentBankRates) {
         calculateConversion(
             amount = doubleAmount,
@@ -358,10 +382,10 @@ private fun ConverterCard(
             .testTag("converter_card"),
         shape = RoundedCornerShape(20.dp),
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-        elevation = CardDefaults.cardElevation(defaultElevation = 3.dp)
+        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
     ) {
         Column(modifier = Modifier.padding(18.dp)) {
-            // Converter Header & Operation Mode
+            // Direction toggle pill
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 verticalAlignment = Alignment.CenterVertically,
@@ -373,18 +397,28 @@ private fun ConverterCard(
                     color = MaterialTheme.colorScheme.onSurface
                 )
 
-                // Direction badge
                 Surface(
                     shape = RoundedCornerShape(12.dp),
-                    color = MaterialTheme.colorScheme.secondaryContainer,
+                    color = MaterialTheme.colorScheme.primaryContainer,
                     modifier = Modifier.clickable { onToggleOperation() }
                 ) {
-                    Text(
-                        text = if (isClientSelling) "Здаць валюту (Купля банка)" else "Купіць валюту (Продаж банка)",
-                        style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold),
-                        color = MaterialTheme.colorScheme.onSecondaryContainer,
-                        modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp)
-                    )
+                    Row(
+                        modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Icon(
+                            imageVector = if (isClientSelling) Icons.Default.SouthEast else Icons.Default.NorthEast,
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.primary,
+                            modifier = Modifier.size(14.dp)
+                        )
+                        Spacer(modifier = Modifier.width(4.dp))
+                        Text(
+                            text = if (isClientSelling) "Здаць валюту" else "Купіць валюту",
+                            style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold),
+                            color = MaterialTheme.colorScheme.onPrimaryContainer
+                        )
+                    }
                 }
             }
 
@@ -410,10 +444,10 @@ private fun ConverterCard(
                     .padding(vertical = 8.dp),
                 horizontalArrangement = Arrangement.spacedBy(8.dp)
             ) {
-                listOf("100", "500", "1000", "5000").forEach { preset ->
+                listOf("50", "100", "500", "1000", "2000").forEach { preset ->
                     Surface(
                         shape = RoundedCornerShape(8.dp),
-                        color = MaterialTheme.colorScheme.surfaceVariant,
+                        color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.7f),
                         modifier = Modifier.clickable { onAmountChanged(preset) }
                     ) {
                         Text(
@@ -427,13 +461,12 @@ private fun ConverterCard(
 
             Spacer(modifier = Modifier.height(8.dp))
 
-            // Currency Selectors with Swap Button
+            // Currency Selectors
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
-                // From Currency
                 Column(modifier = Modifier.weight(1f)) {
                     Text(text = strings.fromCurrency, style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.outline)
                     CurrencySelectorRow(
@@ -447,18 +480,18 @@ private fun ConverterCard(
                     onClick = onSwap,
                     modifier = Modifier
                         .testTag("swap_currencies_button")
-                        .size(42.dp)
+                        .size(40.dp)
                         .clip(CircleShape)
                         .background(MaterialTheme.colorScheme.primaryContainer)
                 ) {
                     Icon(
                         imageVector = Icons.Default.SwapVert,
                         contentDescription = strings.swap,
-                        tint = MaterialTheme.colorScheme.onPrimaryContainer
+                        tint = MaterialTheme.colorScheme.onPrimaryContainer,
+                        modifier = Modifier.size(20.dp)
                     )
                 }
 
-                // To Currency
                 Column(modifier = Modifier.weight(1f), horizontalAlignment = Alignment.End) {
                     Text(text = strings.toCurrency, style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.outline)
                     CurrencySelectorRow(
@@ -469,7 +502,7 @@ private fun ConverterCard(
                 }
             }
 
-            Spacer(modifier = Modifier.height(16.dp))
+            Spacer(modifier = Modifier.height(14.dp))
             Divider(color = MaterialTheme.colorScheme.outlineVariant)
             Spacer(modifier = Modifier.height(14.dp))
 
@@ -478,7 +511,7 @@ private fun ConverterCard(
                 modifier = Modifier
                     .fillMaxWidth()
                     .clip(RoundedCornerShape(14.dp))
-                    .background(MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.45f))
+                    .background(MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.4f))
                     .padding(16.dp),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
@@ -559,10 +592,22 @@ private fun CurrencyRateRow(
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.SpaceBetween
         ) {
-            // Currency flag & code
+            // Currency badge & title
             Row(verticalAlignment = Alignment.CenterVertically) {
-                Text(text = rate.flag, fontSize = 24.sp)
-                Spacer(modifier = Modifier.width(10.dp))
+                Box(
+                    modifier = Modifier
+                        .size(38.dp)
+                        .clip(RoundedCornerShape(10.dp))
+                        .background(MaterialTheme.colorScheme.primaryContainer),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(
+                        text = rate.symbol,
+                        style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
+                        color = MaterialTheme.colorScheme.onPrimaryContainer
+                    )
+                }
+                Spacer(modifier = Modifier.width(12.dp))
                 Column {
                     Text(
                         text = "${rate.scale} ${rate.code}",
@@ -672,12 +717,13 @@ private fun BankComparisonList(
                     horizontalArrangement = Arrangement.SpaceBetween
                 ) {
                     Row(verticalAlignment = Alignment.CenterVertically) {
-                        Text(
-                            text = "${index + 1}.",
-                            style = MaterialTheme.typography.labelMedium,
-                            color = MaterialTheme.colorScheme.outline,
-                            modifier = Modifier.width(20.dp)
+                        Box(
+                            modifier = Modifier
+                                .size(8.dp)
+                                .clip(CircleShape)
+                                .background(Color(item.bank.brandColorHex))
                         )
+                        Spacer(modifier = Modifier.width(8.dp))
                         Column {
                             Row(verticalAlignment = Alignment.CenterVertically) {
                                 Text(
@@ -691,7 +737,7 @@ private fun BankComparisonList(
                                         modifier = Modifier
                                             .clip(RoundedCornerShape(4.dp))
                                             .background(Color(0xFF2E7D32))
-                                            .padding(horizontal = 4.dp, vertical = 1.dp)
+                                            .padding(horizontal = 5.dp, vertical = 1.dp)
                                     ) {
                                         Text(
                                             text = strings.bestBankRate,
@@ -715,7 +761,7 @@ private fun BankComparisonList(
                 }
 
                 if (index < results.size - 1) {
-                    Divider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f))
+                    Divider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.4f))
                 }
             }
         }
@@ -737,18 +783,14 @@ private fun calculateConversion(
     if (amount <= 0 || bankRates == null) return 0.0
     if (from == to) return amount
 
-    // Convert 'from' to BYN
     val amountInByn = if (from == "BYN") {
         amount
     } else {
         val rateObj = bankRates.rates.find { it.code == from } ?: return 0.0
-        // If client sells foreign curr to bank -> bank buys from client (buyRate)
-        // If client buys foreign curr from bank -> bank sells (sellRate)
         val rateToUse = if (isClientSelling) rateObj.buyRate else rateObj.sellRate
         amount * (rateToUse / rateObj.scale)
     }
 
-    // Convert BYN to 'to'
     return if (to == "BYN") {
         amountInByn
     } else {

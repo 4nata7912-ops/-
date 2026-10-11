@@ -1,6 +1,8 @@
 package com.example.feature.utilities
 
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -18,9 +20,15 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Info
+import androidx.compose.material.icons.filled.Bolt
+import androidx.compose.material.icons.filled.History
+import androidx.compose.material.icons.filled.LocalFireDepartment
+import androidx.compose.material.icons.filled.Propane
 import androidx.compose.material.icons.filled.Receipt
 import androidx.compose.material.icons.filled.RestartAlt
+import androidx.compose.material.icons.filled.Save
+import androidx.compose.material.icons.filled.Thermostat
+import androidx.compose.material.icons.filled.WaterDrop
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -40,22 +48,31 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.data.PreferencesManager
 import com.example.model.BelarusUtilityTariffs
+import com.example.model.SavedUtilityCalculation
 import com.example.model.StringsHolder
 import com.example.model.UtilityItem
+import java.text.SimpleDateFormat
+import java.util.Date
 import java.util.Locale
 
 @Composable
 fun UtilitiesScreen(
+    prefsManager: PreferencesManager,
     strings: StringsHolder,
     modifier: Modifier = Modifier
 ) {
-    // State maps for previous and current readings
+    var accountNumber by remember { mutableStateOf(prefsManager.getSavedAccountNumber()) }
+    var savedHistory by remember { mutableStateOf(prefsManager.getSavedUtilityBills()) }
+    var showSavedHistory by remember { mutableStateOf(false) }
+
     val prevReadings = remember {
         mutableStateMapOf<String, String>().apply {
             put("elec", "1420")
@@ -76,7 +93,6 @@ fun UtilitiesScreen(
         }
     }
 
-    // Custom tariffs in case user edits
     val customTariffs = remember {
         mutableStateMapOf<String, Double>().apply {
             BelarusUtilityTariffs.ALL_SERVICES.forEach { put(it.id, it.defaultTariff) }
@@ -100,7 +116,7 @@ fun UtilitiesScreen(
             .padding(horizontal = 16.dp, vertical = 12.dp),
         verticalArrangement = Arrangement.spacedBy(14.dp)
     ) {
-        // Grand Total Header Card
+        // Grand Total Card
         item {
             Card(
                 colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primary),
@@ -124,9 +140,9 @@ fun UtilitiesScreen(
                         style = MaterialTheme.typography.headlineLarge.copy(fontWeight = FontWeight.Bold),
                         color = MaterialTheme.colorScheme.onPrimary
                     )
-                    Spacer(modifier = Modifier.height(10.dp))
+                    Spacer(modifier = Modifier.height(8.dp))
                     Text(
-                        text = "Сума разлічана па субсідаваных тарыфах для насельніцтва Беларусі",
+                        text = "Субсідаваныя тарыфы Рэспублікі Беларусь",
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onPrimary.copy(alpha = 0.8f)
                     )
@@ -134,31 +150,143 @@ fun UtilitiesScreen(
             }
         }
 
-        // Section Title
+        // Account number input & Actions row
         item {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.SpaceBetween
+            Card(
+                shape = RoundedCornerShape(16.dp),
+                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+                elevation = CardDefaults.cardElevation(defaultElevation = 1.dp)
             ) {
-                Text(
-                    text = "Паслугі і лічыльнікі",
-                    style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
-                    color = MaterialTheme.colorScheme.onBackground
-                )
+                Column(modifier = Modifier.padding(14.dp)) {
+                    OutlinedTextField(
+                        value = accountNumber,
+                        onValueChange = {
+                            accountNumber = it
+                            prefsManager.setSavedAccountNumber(it)
+                        },
+                        label = { Text(strings.accountNumber) },
+                        singleLine = true,
+                        modifier = Modifier.fillMaxWidth(),
+                        shape = RoundedCornerShape(12.dp)
+                    )
 
-                OutlinedButton(
-                    onClick = {
-                        prevReadings.clear()
-                        currReadings.clear()
-                    },
-                    modifier = Modifier.testTag("clear_utilities_button")
-                ) {
-                    Icon(imageVector = Icons.Default.RestartAlt, contentDescription = null, modifier = Modifier.size(16.dp))
-                    Spacer(modifier = Modifier.width(4.dp))
-                    Text(text = strings.clear, fontSize = 12.sp)
+                    Spacer(modifier = Modifier.height(10.dp))
+
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        Button(
+                            onClick = {
+                                val now = SimpleDateFormat("dd.MM.yyyy, HH:mm", Locale.getDefault()).format(Date())
+                                val newBill = SavedUtilityCalculation(
+                                    id = "bill_${System.currentTimeMillis()}",
+                                    dateText = now,
+                                    accountNumber = accountNumber,
+                                    totalByn = totalByn,
+                                    details = "Святло, вада, газ, ацяпленне"
+                                )
+                                prefsManager.saveUtilityBill(newBill)
+                                savedHistory = prefsManager.getSavedUtilityBills()
+                                showSavedHistory = true
+                            },
+                            modifier = Modifier.weight(1f)
+                        ) {
+                            Icon(imageVector = Icons.Default.Save, contentDescription = null, modifier = Modifier.size(16.dp))
+                            Spacer(modifier = Modifier.width(6.dp))
+                            Text(text = strings.saveCalculation, fontSize = 12.sp)
+                        }
+
+                        OutlinedButton(
+                            onClick = {
+                                prevReadings.clear()
+                                currReadings.clear()
+                            },
+                            modifier = Modifier.testTag("clear_utilities_button")
+                        ) {
+                            Icon(imageVector = Icons.Default.RestartAlt, contentDescription = null, modifier = Modifier.size(16.dp))
+                        }
+                    }
                 }
             }
+        }
+
+        // Saved History toggle
+        if (savedHistory.isNotEmpty()) {
+            item {
+                Card(
+                    shape = RoundedCornerShape(14.dp),
+                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.4f)),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clickable { showSavedHistory = !showSavedHistory }
+                ) {
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(12.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.SpaceBetween
+                    ) {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Icon(imageVector = Icons.Default.History, contentDescription = null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(20.dp))
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Text(
+                                text = "${strings.savedHistory} (${savedHistory.size})",
+                                style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.Bold),
+                                color = MaterialTheme.colorScheme.onSurface
+                            )
+                        }
+                        Text(
+                            text = if (showSavedHistory) "Згарнуць ▲" else "Паказаць ▼",
+                            style = MaterialTheme.typography.labelSmall.copy(fontWeight = FontWeight.Bold),
+                            color = MaterialTheme.colorScheme.primary
+                        )
+                    }
+                }
+            }
+
+            if (showSavedHistory) {
+                items(savedHistory.take(5), key = { it.id }) { bill ->
+                    Card(
+                        shape = RoundedCornerShape(12.dp),
+                        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+                        elevation = CardDefaults.cardElevation(defaultElevation = 1.dp),
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(12.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.SpaceBetween
+                        ) {
+                            Column {
+                                Text(text = bill.dateText, style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.outline)
+                                if (bill.accountNumber.isNotBlank()) {
+                                    Text(text = "Л/р: ${bill.accountNumber}", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurface)
+                                }
+                            }
+                            Text(
+                                text = "${String.format(Locale.US, "%.2f", bill.totalByn)} BYN",
+                                style = MaterialTheme.typography.titleMedium.copy(
+                                    fontWeight = FontWeight.Bold,
+                                    color = MaterialTheme.colorScheme.primary
+                                )
+                            )
+                        }
+                    }
+                }
+            }
+        }
+
+        // Section Title
+        item {
+            Text(
+                text = "Лічыльнікі і паслугі",
+                style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
+                color = MaterialTheme.colorScheme.onBackground
+            )
         }
 
         // Each Utility service card
@@ -184,11 +312,11 @@ fun UtilitiesScreen(
             )
         }
 
-        // ERIP (АРІП) Instructions Guide
+        // ERIP Guide
         item {
             Card(
                 shape = RoundedCornerShape(16.dp),
-                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.6f)),
+                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)),
                 modifier = Modifier.fillMaxWidth()
             ) {
                 Column(modifier = Modifier.padding(16.dp)) {
@@ -197,7 +325,7 @@ fun UtilitiesScreen(
                             imageVector = Icons.Default.Receipt,
                             contentDescription = null,
                             tint = MaterialTheme.colorScheme.primary,
-                            modifier = Modifier.size(22.dp)
+                            modifier = Modifier.size(20.dp)
                         )
                         Spacer(modifier = Modifier.width(8.dp))
                         Text(
@@ -206,7 +334,7 @@ fun UtilitiesScreen(
                             color = MaterialTheme.colorScheme.onSurface
                         )
                     }
-                    Spacer(modifier = Modifier.height(8.dp))
+                    Spacer(modifier = Modifier.height(6.dp))
                     Text(
                         text = strings.eripInstructions,
                         style = MaterialTheme.typography.bodySmall,
@@ -235,6 +363,14 @@ private fun UtilityCard(
     onCurrChanged: (String) -> Unit,
     strings: StringsHolder
 ) {
+    val iconVector: ImageVector = when (item.iconName) {
+        "bolt" -> Icons.Default.Bolt
+        "water_drop" -> Icons.Default.WaterDrop
+        "hot_water" -> Icons.Default.LocalFireDepartment
+        "gas" -> Icons.Default.Propane
+        else -> Icons.Default.Thermostat
+    }
+
     Card(
         modifier = Modifier
             .fillMaxWidth()
@@ -244,15 +380,27 @@ private fun UtilityCard(
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
     ) {
         Column(modifier = Modifier.padding(14.dp)) {
-            // Title and calculated cost
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
-                    Text(text = item.iconEmoji, fontSize = 20.sp)
-                    Spacer(modifier = Modifier.width(8.dp))
+                    Box(
+                        modifier = Modifier
+                            .size(36.dp)
+                            .clip(RoundedCornerShape(10.dp))
+                            .background(MaterialTheme.colorScheme.primaryContainer),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Icon(
+                            imageVector = iconVector,
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.onPrimaryContainer,
+                            modifier = Modifier.size(20.dp)
+                        )
+                    }
+                    Spacer(modifier = Modifier.width(10.dp))
                     Column {
                         Text(
                             text = when (item.id) {
@@ -291,7 +439,7 @@ private fun UtilityCard(
 
             Spacer(modifier = Modifier.height(10.dp))
 
-            // Inputs Row
+            // Inputs
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.spacedBy(10.dp)

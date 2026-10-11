@@ -1,7 +1,6 @@
 package com.example.feature.weather
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -20,11 +19,18 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.AcUnit
 import androidx.compose.material.icons.filled.Air
+import androidx.compose.material.icons.filled.BlurOn
+import androidx.compose.material.icons.filled.CloudQueue
 import androidx.compose.material.icons.filled.Compress
+import androidx.compose.material.icons.filled.Grain
 import androidx.compose.material.icons.filled.LocationOn
 import androidx.compose.material.icons.filled.Refresh
+import androidx.compose.material.icons.filled.Thunderstorm
 import androidx.compose.material.icons.filled.WaterDrop
+import androidx.compose.material.icons.filled.WbCloudy
+import androidx.compose.material.icons.filled.WbSunny
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
@@ -45,6 +51,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -85,13 +92,13 @@ fun WeatherScreen(
             .fillMaxSize()
             .background(MaterialTheme.colorScheme.background)
     ) {
-        // City chips horizontal scroll
+        // City selector chips
         Surface(
             color = MaterialTheme.colorScheme.surface,
             tonalElevation = 1.dp,
             modifier = Modifier.fillMaxWidth()
         ) {
-            Column(modifier = Modifier.padding(vertical = 8.dp)) {
+            Column(modifier = Modifier.padding(vertical = 6.dp)) {
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -104,7 +111,7 @@ fun WeatherScreen(
                         Spacer(modifier = Modifier.width(6.dp))
                         Text(
                             text = strings.selectCity,
-                            style = MaterialTheme.typography.labelLarge.copy(fontWeight = FontWeight.Bold),
+                            style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.Bold),
                             color = MaterialTheme.colorScheme.onSurface
                         )
                     }
@@ -113,16 +120,16 @@ fun WeatherScreen(
                         onClick = { loadWeather(selectedCity) },
                         modifier = Modifier
                             .testTag("refresh_weather_button")
-                            .size(36.dp)
+                            .size(34.dp)
                     ) {
                         if (isLoading) {
-                            CircularProgressIndicator(modifier = Modifier.size(18.dp), strokeWidth = 2.dp)
+                            CircularProgressIndicator(modifier = Modifier.size(16.dp), strokeWidth = 2.dp)
                         } else {
                             Icon(
                                 imageVector = Icons.Default.Refresh,
                                 contentDescription = strings.refresh,
                                 tint = MaterialTheme.colorScheme.primary,
-                                modifier = Modifier.size(20.dp)
+                                modifier = Modifier.size(18.dp)
                             )
                         }
                     }
@@ -133,7 +140,7 @@ fun WeatherScreen(
                     modifier = Modifier
                         .fillMaxWidth()
                         .horizontalScroll(cityScroll)
-                        .padding(horizontal = 16.dp, vertical = 4.dp),
+                        .padding(horizontal = 16.dp, vertical = 2.dp),
                     horizontalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
                     BelarusianCity.ALL.forEach { city ->
@@ -158,9 +165,10 @@ fun WeatherScreen(
             weatherData?.let { data ->
                 // Current Weather Hero Card
                 item {
+                    val weatherIcon = getWeatherIcon(data.conditionCode)
                     Card(
                         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.45f)),
-                        shape = RoundedCornerShape(24.dp),
+                        shape = RoundedCornerShape(22.dp),
                         modifier = Modifier
                             .fillMaxWidth()
                             .testTag("weather_hero_card")
@@ -186,7 +194,20 @@ fun WeatherScreen(
                                 verticalAlignment = Alignment.CenterVertically,
                                 horizontalArrangement = Arrangement.Center
                             ) {
-                                Text(text = data.conditionIcon, fontSize = 48.sp)
+                                Box(
+                                    modifier = Modifier
+                                        .size(54.dp)
+                                        .clip(CircleShape)
+                                        .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.15f)),
+                                    contentAlignment = Alignment.Center
+                                ) {
+                                    Icon(
+                                        imageVector = weatherIcon,
+                                        contentDescription = null,
+                                        tint = MaterialTheme.colorScheme.primary,
+                                        modifier = Modifier.size(34.dp)
+                                    )
+                                }
                                 Spacer(modifier = Modifier.width(16.dp))
                                 Text(
                                     text = "${data.tempC}°C",
@@ -206,7 +227,7 @@ fun WeatherScreen(
                                 color = MaterialTheme.colorScheme.outline
                             )
 
-                            Spacer(modifier = Modifier.height(18.dp))
+                            Spacer(modifier = Modifier.height(16.dp))
                             Divider(color = MaterialTheme.colorScheme.outlineVariant)
                             Spacer(modifier = Modifier.height(14.dp))
 
@@ -235,10 +256,10 @@ fun WeatherScreen(
                     }
                 }
 
-                // 5-Day Forecast Title
+                // 5-Day Forecast Header
                 item {
                     Text(
-                        text = "Прагноз на бліжэйшыя дні",
+                        text = "Прагноз па днях",
                         style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
                         color = MaterialTheme.colorScheme.onBackground
                     )
@@ -246,6 +267,7 @@ fun WeatherScreen(
 
                 // Daily forecast items
                 items(data.forecastDays) { day ->
+                    val dayIcon = getWeatherIcon(day.conditionCode)
                     Card(
                         shape = RoundedCornerShape(14.dp),
                         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
@@ -260,7 +282,20 @@ fun WeatherScreen(
                             horizontalArrangement = Arrangement.SpaceBetween
                         ) {
                             Row(verticalAlignment = Alignment.CenterVertically) {
-                                Text(text = day.icon, fontSize = 22.sp)
+                                Box(
+                                    modifier = Modifier
+                                        .size(34.dp)
+                                        .clip(CircleShape)
+                                        .background(MaterialTheme.colorScheme.surfaceVariant),
+                                    contentAlignment = Alignment.Center
+                                ) {
+                                    Icon(
+                                        imageVector = dayIcon,
+                                        contentDescription = null,
+                                        tint = MaterialTheme.colorScheme.primary,
+                                        modifier = Modifier.size(18.dp)
+                                    )
+                                }
                                 Spacer(modifier = Modifier.width(10.dp))
                                 Column {
                                     Text(
@@ -301,9 +336,23 @@ fun WeatherScreen(
     }
 }
 
+private fun getWeatherIcon(code: String): ImageVector {
+    return when (code) {
+        "sunny" -> Icons.Default.WbSunny
+        "partly_cloudy" -> Icons.Default.WbCloudy
+        "cloudy" -> Icons.Default.CloudQueue
+        "rain", "light_rain" -> Icons.Default.WaterDrop
+        "heavy_rain" -> Icons.Default.Grain
+        "thunder" -> Icons.Default.Thunderstorm
+        "snow" -> Icons.Default.AcUnit
+        "fog" -> Icons.Default.BlurOn
+        else -> Icons.Default.WbCloudy
+    }
+}
+
 @Composable
 private fun ParameterItem(
-    icon: androidx.compose.ui.graphics.vector.ImageVector,
+    icon: ImageVector,
     label: String,
     value: String
 ) {

@@ -32,11 +32,10 @@ class WeatherRepository {
                     val root = JSONObject(jsonStr)
                     val current = root.getJSONObject("current_weather")
                     val temp = current.getDouble("temperature")
-                    val wind = current.getDouble("windspeed") / 3.6 // convert km/h to m/s
+                    val wind = current.getDouble("windspeed") / 3.6
                     val code = current.getInt("weathercode")
-                    val (desc, icon) = decodeWmoCode(code)
+                    val (desc, condCode) = decodeWmoCode(code)
 
-                    // Daily forecast
                     val forecastList = mutableListOf<ForecastDay>()
                     if (root.has("daily")) {
                         val daily = root.getJSONObject("daily")
@@ -46,14 +45,14 @@ class WeatherRepository {
                         val codes = daily.getJSONArray("weathercode")
 
                         for (i in 0 until minOf(5, times.length())) {
-                            val (fDesc, fIcon) = decodeWmoCode(codes.getInt(i))
+                            val (fDesc, fCode) = decodeWmoCode(codes.getInt(i))
                             val dateStr = times.getString(i)
                             forecastList.add(
                                 ForecastDay(
                                     dayName = formatDay(dateStr, i),
                                     tempMax = maxes.getDouble(i),
                                     tempMin = mines.getDouble(i),
-                                    icon = fIcon,
+                                    conditionCode = fCode,
                                     condition = fDesc
                                 )
                             )
@@ -64,35 +63,33 @@ class WeatherRepository {
                         city = city,
                         tempC = (temp * 10).roundToInt() / 10.0,
                         conditionDescription = desc,
-                        conditionIcon = icon,
+                        conditionCode = condCode,
                         windSpeedMs = (wind * 10).roundToInt() / 10.0,
                         windDirection = decodeWindDirection(current.optDouble("winddirection", 0.0)),
-                        humidityPercent = 75,
-                        pressureMmHg = 748,
+                        humidityPercent = 74,
+                        pressureMmHg = 749,
                         feelsLikeC = ((temp - 1.2) * 10).roundToInt() / 10.0,
                         forecastDays = if (forecastList.isNotEmpty()) forecastList else getFallbackForecast()
                     )
                 }
             }
-        } catch (_: Exception) {
-            // Fallback
-        }
+        } catch (_: Exception) {}
         return@withContext getFallbackWeather(city)
     }
 
     private fun decodeWmoCode(code: Int): Pair<String, String> {
         return when (code) {
-            0 -> "Ясна" to "☀️"
-            1, 2 -> "Пераменная воблачнасць" to "🌤️"
-            3 -> "Воблачна" to "☁️"
-            45, 48 -> "Туман" to "🌫️"
-            51, 53, 55 -> "Дробны дождж" to "🌦️"
-            61, 63, 65 -> "Дождж" to "🌧️"
-            71, 73, 75 -> "Снег" to "🌨️"
-            77 -> "Снежныя крупы" to "❄️"
-            80, 81, 82 -> "Ліўневы дождж" to "🌧️"
-            95, 96, 99 -> "Навальніца" to "⛈️"
-            else -> "Умерана" to "⛅"
+            0 -> "Ясна" to "sunny"
+            1, 2 -> "Пераменная воблачнасць" to "partly_cloudy"
+            3 -> "Воблачна" to "cloudy"
+            45, 48 -> "Туман" to "fog"
+            51, 53, 55 -> "Дробны дождж" to "light_rain"
+            61, 63, 65 -> "Дождж" to "rain"
+            71, 73, 75 -> "Снег" to "snow"
+            77 -> "Снежныя крупы" to "snow"
+            80, 81, 82 -> "Ліўневы дождж" to "heavy_rain"
+            95, 96, 99 -> "Навальніца" to "thunder"
+            else -> "Умерана" to "partly_cloudy"
         }
     }
 
@@ -119,11 +116,11 @@ class WeatherRepository {
     }
 
     private fun getFallbackForecast(): List<ForecastDay> = listOf(
-        ForecastDay("Сёння", 14.5, 7.2, "🌤️", "Пераменная воблачнасць"),
-        ForecastDay("Заўтра", 15.0, 8.1, "⛅", "Воблачна з праясненнямі"),
-        ForecastDay("Паслязаўтра", 13.2, 6.5, "🌧️", "Кароткачасовы дождж"),
-        ForecastDay("Праз 3 дні", 16.1, 9.0, "☀️", "Цёпла і ясна"),
-        ForecastDay("Праз 4 дні", 15.5, 8.4, "🌤️", "Малавоблачна")
+        ForecastDay("Сёння", 14.5, 7.2, "partly_cloudy", "Пераменная воблачнасць"),
+        ForecastDay("Заўтра", 15.0, 8.1, "cloudy", "Воблачна з праясненнямі"),
+        ForecastDay("Паслязаўтра", 13.2, 6.5, "rain", "Кароткачасовы дождж"),
+        ForecastDay("Праз 3 дні", 16.1, 9.0, "sunny", "Цёпла і ясна"),
+        ForecastDay("Праз 4 дні", 15.5, 8.4, "partly_cloudy", "Малавоблачна")
     )
 
     fun getFallbackWeather(city: BelarusianCity): WeatherData {
@@ -140,7 +137,7 @@ class WeatherRepository {
             city = city,
             tempC = baseTemp,
             conditionDescription = "Пераменная воблачнасць",
-            conditionIcon = "🌤️",
+            conditionCode = "partly_cloudy",
             windSpeedMs = 3.8,
             windDirection = "Зах",
             humidityPercent = 68,
